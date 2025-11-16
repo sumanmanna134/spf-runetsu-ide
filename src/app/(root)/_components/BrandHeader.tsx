@@ -1,5 +1,6 @@
 "use client"
 import { useTheme } from "@/app/theme/provider";
+import { CodeXml } from "lucide-react";
 import Link from "next/link";
 import { ComponentType } from "react";
 
@@ -42,7 +43,7 @@ export default function BrandHeader({
         }}
       >
         {Logo && (
-          <Logo
+          <CodeXml
             className="size-6 transition-all duration-500 group-hover:rotate-0"
             style={{
               color: brand.logoColor,
