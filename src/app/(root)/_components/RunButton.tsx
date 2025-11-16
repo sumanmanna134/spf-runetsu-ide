@@ -1,38 +1,35 @@
 "use client";
 
 import { getExecutionResult, useCodeEditorStore } from "@/store/useCodeEditorStore";
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { Loader2, PlayIcon } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
 import { useMutation } from "convex/react";
 
-function RunButton(){
-    const {user} = useUser();
-    const {runCode, language, isRunning }= useCodeEditorStore();
+function RunButton() {
+  const { isSignedIn, user } = useUser();
+  const { runCode, language, isRunning } = useCodeEditorStore();
+  const saveExecution = useMutation(api.codeExecutions.saveExecution);
 
-    const saveExecution = useMutation(api.codeExecutions.saveExecution);
+  const handleRun = async () => {
+    if (!isSignedIn) return;
 
+    await runCode();
+    const result = getExecutionResult();
 
-
-
-    const handleRun = async()=>{
-        await runCode();
-        const result = getExecutionResult();
-        if(user && result){
-            //todo save the result
-            await saveExecution({
-                language,
-                code: result.code,
-                output: result.output || undefined,
-                error: result.error || undefined
-            })
-
-        }
-
-
+    if (user && result) {
+      await saveExecution({
+        language,
+        code: result.code,
+        output: result.output || undefined,
+        error: result.error || undefined,
+      });
     }
-    return(
+  };
+
+  // If user not signed in, wrap button in SignInButton
+  const ButtonContent = (
     <motion.button
       whileHover={{ scale: isRunning ? 1 : 1.05 }}
       whileTap={{ scale: isRunning ? 1 : 0.95 }}
@@ -62,12 +59,17 @@ function RunButton(){
       ) : (
         <PlayIcon className="size-4 text-green-400" />
       )}
-
       <span className="text-sm tracking-wide">
-        {isRunning ? "Running..." : "Run"}
+        {isRunning ? "Running..." : !isSignedIn ? "Run" : "Run"}
       </span>
     </motion.button>
-    );
+  );
+
+  return isSignedIn ? (
+    ButtonContent
+  ) : (
+    <SignInButton mode="modal">{ButtonContent}</SignInButton>
+  );
 }
 
 export default RunButton;
